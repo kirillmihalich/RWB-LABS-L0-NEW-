@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Поиск городов России</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .search-form { margin-bottom: 20px; }
+        input[type="text"] { padding: 8px; width: 300px; }
+        button { padding: 8px 16px; }
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+    </style>
+</head>
+<body>
+    <h1>Поиск городов России</h1>
+
+    <div class="search-form">
+        <form id="searchForm">
+            <input type="text" id="searchQuery" placeholder="Введите часть названия города..." />
+            <button type="submit">Поиск</button>
+        </form>
+    </div>
+
+    <div id="results"></div>
+
+    <script>
+        document.getElementById('searchForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const query = document.getElementById('searchQuery').value.trim();
+
+            fetch(`/api/search?q=${encodeURIComponent(query)}`)
+                .then(response => response.json())
+                .then(data => {
+                    const resultsDiv = document.getElementById('results');
+                    if (data.length === 0) {
+                        resultsDiv.innerHTML = '<p>Города не найдены.</p>';
+                        return;
+                    }
+
+                    let tableHTML = `
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Название</th>
+                                    <th>Регион</th>
+                                    <th>Расстояние до Москвы (км)</th>
+                                    <th>Население (млн чел.)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                    `;
+
+                    data.forEach(city => {
+                        tableHTML += `
+                            <tr>
+                                <td>${city.name}</td>
+                                <td>${city.region_name}</td>
+                                <td>${city.distance_to_moscow}</td>
+                                <td>${city.population_million}</td>
+                            </tr>
+                        `;
+                    });
+
+                    tableHTML += `
+                            </tbody>
+                        </table>
+                    `;
+
+                    resultsDiv.innerHTML = tableHTML;
+                })
+                .catch(error => {
+                    console.error('Ошибка:', error);
+                    document.getElementById('results').innerHTML = '<p>Произошла ошибка при загрузке данных.</p>';
+                });
+        });
+    </script>
+</body>
+</html>
